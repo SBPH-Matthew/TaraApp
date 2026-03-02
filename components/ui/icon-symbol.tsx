@@ -1,29 +1,29 @@
-// Fallback for using MaterialIcons on Android and web.
+// Tab icon bridge using Lucide icons across platforms.
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
+import { AppIcon } from '@/components/ui/app-icon';
+import { SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
-import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
+import { OpaqueColorValue, type StyleProp, type ViewStyle } from 'react-native';
 
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
+type MappedName = ComponentProps<typeof AppIcon>['name'];
 type IconSymbolName = keyof typeof MAPPING;
 
 /**
- * Add your SF Symbols to Material Icons mappings here.
- * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
- * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
+ * Tab/nav icon names mapped to AppIcon names.
  */
-const MAPPING = {
+const MAPPING: Record<string, MappedName> = {
   'house.fill': 'home',
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
-} as IconMapping;
+  'luggage': 'luggage',
+  'store.fill': 'store',
+  'gift.fill': 'card-giftcard',
+  'person.fill': 'person',
+};
 
 /**
- * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
- * This ensures a consistent look across platforms, and optimal resource usage.
- * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
+ * IconSymbol keeps existing tab icon names while rendering Lucide via AppIcon.
  */
 export function IconSymbol({
   name,
@@ -34,8 +34,8 @@ export function IconSymbol({
   name: IconSymbolName;
   size?: number;
   color: string | OpaqueColorValue;
-  style?: StyleProp<TextStyle>;
+  style?: StyleProp<ViewStyle>;
   weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  return <AppIcon color={color} size={size} name={MAPPING[name] ?? 'help'} style={style} />;
 }
