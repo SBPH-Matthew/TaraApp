@@ -8,6 +8,7 @@ import {
   FlatList,
   Image,
   ImageBackground,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,11 +18,15 @@ import {
 
 import { ThemedText } from "@/components/themed-text";
 import {
+  DUTY_FREE_SHOP_URL,
   type DutyFreeProduct,
+  getDutyFreeProductUrl,
   useFeaturedProducts,
 } from "@/services/dutyFreeProducts";
 import {
   GIFT_PLACEHOLDER_IMAGE,
+  SPEEDREGALO_COLLECTIONS_URL,
+  getSpeedRegaloProductUrl,
   useStorefrontProducts,
 } from "@/services/shopifyStorefront";
 
@@ -58,6 +63,7 @@ type GiftCardItem = {
   name: string;
   price: string;
   image: number | string;
+  handle?: string | null;
 };
 
 const GIFT_CARDS: GiftCardItem[] = [
@@ -327,7 +333,6 @@ export default function HomeScreen() {
       <SectionTitle
         title="SHOP DUTY FREE"
         subtitle="Browse premium brands and reserve your duty-free shopping ahead of time"
-        viewMoreHref="/shop"
       />
       <HorizontalProductCards />
 
@@ -484,9 +489,11 @@ type ProductCardItem = {
 function ProductCard({
   item,
   width,
+  onPress,
 }: {
   item: ProductCardItem;
   width: number;
+  onPress?: () => void;
 }) {
   const [imageError, setImageError] = useState(false);
   const isRemoteImage = typeof item.image === "string";
@@ -528,7 +535,7 @@ function ProductCard({
           >
             <AppIcon name="favorite-border" size={20} color="#111827" />
           </Pressable>
-          <Pressable style={styles.viewProductBtn}>
+          <Pressable style={styles.viewProductBtn} onPress={onPress}>
             <AppIcon name="external-link" size={14} color="#fff" />
             <ThemedText style={styles.viewProductText}>View product</ThemedText>
           </Pressable>
@@ -583,6 +590,9 @@ function HorizontalProductCards() {
               image: product.image,
             }}
             width={PRODUCT_CARD_WIDTH}
+            onPress={() =>
+              Linking.openURL(getDutyFreeProductUrl(product.slug))
+            }
           />
         ))}
       </ScrollView>
@@ -607,6 +617,13 @@ function HorizontalProductCards() {
           </Pressable>
         </View>
       </View>
+      <Pressable
+        style={styles.viewAllRow}
+        onPress={() => Linking.openURL(DUTY_FREE_SHOP_URL)}
+      >
+        <ThemedText style={styles.viewAllText}>View More</ThemedText>
+        <AppIcon name="arrow-forward" size={14} color="#1130bc" />
+      </Pressable>
     </View>
   );
 }
@@ -629,6 +646,7 @@ function HorizontalGiftCards() {
         name: p.name,
         price: p.price || "$0.00",
         image: p.image || GIFT_PLACEHOLDER_IMAGE,
+        handle: p.handle,
       }));
     }
     return GIFT_CARDS;
@@ -664,7 +682,14 @@ function HorizontalGiftCards() {
         }}
       >
         {items.map((item) => (
-          <ProductCard key={item.id} item={item} width={PRODUCT_CARD_WIDTH} />
+          <ProductCard
+            key={item.id}
+            item={item}
+            width={PRODUCT_CARD_WIDTH}
+            onPress={() =>
+              Linking.openURL(getSpeedRegaloProductUrl(item.handle ?? null))
+            }
+          />
         ))}
       </ScrollView>
       <View style={styles.sliderBottom}>
@@ -688,6 +713,13 @@ function HorizontalGiftCards() {
           </Pressable>
         </View>
       </View>
+      <Pressable
+        style={styles.viewAllRow}
+        onPress={() => Linking.openURL(SPEEDREGALO_COLLECTIONS_URL)}
+      >
+        <ThemedText style={styles.viewAllText}>View More</ThemedText>
+        <AppIcon name="arrow-forward" size={14} color="#1130bc" />
+      </Pressable>
     </View>
   );
 }
@@ -872,6 +904,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "transparent",
+  },
+  viewAllRow: {
+    alignSelf: "flex-end",
+    marginTop: 16,
+    paddingHorizontal: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  viewAllText: {
+    color: "#1130bc",
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
   },
   flightCard: {
     marginHorizontal: 8,
