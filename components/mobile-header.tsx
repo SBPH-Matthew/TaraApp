@@ -22,7 +22,7 @@ export function MobileHeader() {
                 <ThemedText style={styles.termText}>NAIA Terminal 1</ThemedText>
                 <AppIcon
                   name="keyboard-arrow-down"
-                  size={18}
+                  size={20}
                   color="#fff"
                 />
               </View>
@@ -39,7 +39,7 @@ export function MobileHeader() {
                 >
                   <AppIcon
                     name="shopping-basket"
-                    size={18}
+                    size={20}
                     color="#fff"
                   />
                 </Pressable>
@@ -53,7 +53,7 @@ export function MobileHeader() {
               >
                 <AppIcon
                   name="notifications-none"
-                  size={18}
+                  size={20}
                   color="#fff"
                 />
               </Pressable>
@@ -91,8 +91,8 @@ const styles = StyleSheet.create({
   },
   topBlue: {
     backgroundColor: "#1130bc",
-    paddingHorizontal: 8,
-    paddingTop: 4,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 32,
   },
   row: {
@@ -100,15 +100,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  departBtn: { minHeight: 40, justifyContent: "center" },
-  departLabel: { fontFamily: FontFamilies.body, fontSize: 9, color: "#cad3ff" },
-  termRow: { flexDirection: "row", alignItems: "center", gap: 2 },
-  termText: { fontFamily: FontFamilies.bodyBold, color: "#fff", fontSize: 15 },
+  departBtn: { height: 56, justifyContent: "center" },
+  departLabel: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    lineHeight: 15,
+    color: "rgba(255,255,255,0.8)",
+  },
+  termRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  termText: {
+    fontFamily: FontFamilies.bodyBold,
+    color: "#fff",
+    fontSize: 18,
+    lineHeight: 22,
+  },
   actions: { flexDirection: "row", alignItems: "center", gap: 6 },
   iconBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
