@@ -101,10 +101,12 @@ export default function TripsScreen() {
         </ThemedText>
         <Link href="/fly" asChild>
           <Pressable style={({ pressed }) => [styles.addLink, pressed && styles.pressed]}>
-            <ThemedText style={[styles.addLinkText, { color: tint }]}>
-              Add a Flight
-            </ThemedText>
-            <AppIcon name="flight" size={16} color={tint} />
+            <View style={styles.addLinkContent}>
+              <ThemedText style={[styles.addLinkText, { color: tint }]}>
+                Add a Flight
+              </ThemedText>
+              <AppIcon name="flight" size={16} color={tint} />
+            </View>
           </Pressable>
         </Link>
       </View>
@@ -129,8 +131,10 @@ export default function TripsScreen() {
           </ThemedText>
           <Link href="/fly" asChild>
             <Pressable style={[styles.addButton, { backgroundColor: tint }]}>
-              <ThemedText style={styles.addButtonText}>Add a Flight</ThemedText>
-              <AppIcon name="flight" size={16} color="#fff" />
+              <View style={styles.addButtonContent}>
+                <ThemedText style={styles.addButtonText}>Add a Flight</ThemedText>
+                <AppIcon name="flight" size={16} color="#fff" />
+              </View>
             </Pressable>
           </Link>
         </View>
@@ -160,11 +164,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   addLink: {
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  addLinkContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    minHeight: 44,
-    justifyContent: 'center',
   },
   pressed: { opacity: 0.8 },
   addLinkText: { fontSize: 14, fontWeight: '600' },
@@ -187,14 +193,18 @@ const styles = StyleSheet.create({
   emptyTitle: { marginTop: 24 },
   emptySubtitle: { marginTop: 8, textAlign: 'center', maxWidth: 320 },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
     marginTop: 24,
     minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   addButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
   scroll: { flex: 1 },

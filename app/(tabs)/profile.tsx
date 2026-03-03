@@ -2,8 +2,10 @@ import { ImageBackground, Pressable, ScrollView, StyleSheet, View } from 'react-
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { AccountAuthScreen } from '@/components/account-auth-screen';
 import { AppIcon } from '@/components/ui/app-icon';
 import { ThemedText } from '@/components/themed-text';
+import { useAuth } from '@/contexts/AuthContext';
 import { BACKGROUND } from '@/constants/theme';
 
 type MenuItem = {
@@ -21,6 +23,16 @@ const MENU_ITEMS: MenuItem[] = [
 ];
 
 export default function ProfileScreen() {
+  const { isAuthenticated, setAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <AccountAuthScreen
+        onSignInSuccess={() => setAuthenticated(true)}
+      />
+    );
+  }
+
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.profileCard}>

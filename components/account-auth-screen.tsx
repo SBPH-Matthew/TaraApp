@@ -9,7 +9,6 @@ import {
   View,
 } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
-import { Link, router } from 'expo-router';
 
 import { GoogleIcon } from '@/components/GoogleIcon';
 import { ThemedText } from '@/components/themed-text';
@@ -20,19 +19,22 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_MAX_WIDTH = 400;
 const CARD_WIDTH = Math.min(SCREEN_WIDTH - 32, CARD_MAX_WIDTH);
 
-/** Light secondary yellow – matches companion_app Sign Up button (bg-secondary, text white) */
-const SECONDARY_BUTTON_BG = '#ffd814';
+type AuthView = 'sign-in' | 'sign-up';
+
+type Props = Readonly<{
+  onSignInSuccess?: () => void;
+}>;
 
 /**
- * Sign up – native conversion of companion_app SignUpPage (mobile view).
- * Card layout, first/last name, email, password, confirm password, Google button, link to sign-in.
- * TODO: wire register API when backend is ready.
+ * Auth screen for Account tab when not authenticated.
+ * Toggles between Sign In and Sign Up in place (no navigation). Layout/styling from companion_app.
  */
-export default function SignUpScreen() {
-  const [firstname, setFirstname] = useState('');
-  const [lastname, setLastname] = useState('');
+export function AccountAuthScreen({ onSignInSuccess }: Props) {
+  const [view, setView] = useState<AuthView>('sign-in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstname, setFirstname] = useState('');
+  const [lastname, setLastname] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -42,29 +44,46 @@ export default function SignUpScreen() {
   const colorScheme = useColorScheme();
   const primary = Colors[colorScheme ?? 'light'].primary;
 
-  const validate = (): string | null => {
+  const handleSignIn = async () => {
+    setError(null);
+    if (!email.trim() || !password) {
+      setError('Email and password are required.');
+      return;
+    }
+    setLoading(true);
+    try {
+      // TODO: call login API when backend exists
+      await new Promise((r) => setTimeout(r, 600));
+      onSignInSuccess?.();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Sign in failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateSignUp = (): string | null => {
     if (!firstname.trim()) return 'First name is required.';
     if (!lastname.trim()) return 'Last name is required.';
     if (!email.trim()) return 'Email is required.';
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return 'Invalid email address.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Invalid email address.';
     if (password.length < 8) return 'Password must be at least 8 characters.';
     if (password !== passwordConfirmation) return 'Passwords do not match.';
     return null;
   };
 
-  const handleSubmit = async () => {
+  const handleSignUp = async () => {
     setError(null);
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    const err = validateSignUp();
+    if (err) {
+      setError(err);
       return;
     }
     setLoading(true);
     try {
       // TODO: call register API when backend exists
       await new Promise((r) => setTimeout(r, 800));
-      router.replace('/');
+      onSignInSuccess?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Registration failed.');
     } finally {
@@ -75,12 +94,14 @@ export default function SignUpScreen() {
   const handleGoogle = () => {
     setError(null);
     setGoogleLoading(true);
-    // TODO: getGoogleRedirectUrl() and redirect
+    const message = view === 'sign-in' ? 'Google sign-in: coming soon.' : 'Google sign-up: coming soon.';
     setTimeout(() => {
       setGoogleLoading(false);
-      setError('Google sign-up: coming soon.');
+      setError(message);
     }, 400);
   };
+
+  const isBusy = loading || googleLoading;
 
   return (
     <ScrollView
@@ -91,10 +112,12 @@ export default function SignUpScreen() {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <ThemedText style={[styles.title, { color: primary }]}>
-            Sign Up
+            {view === 'sign-in' ? 'Sign In' : 'Sign Up'}
           </ThemedText>
           <ThemedText style={styles.subtitle}>
-            Sign up to keep everything ready for your next flight.
+            {view === 'sign-in'
+              ? 'Sign in to keep everything ready for your next flight.'
+              : 'Sign up to keep everything ready for your next flight.'}
           </ThemedText>
         </View>
 
@@ -105,28 +128,30 @@ export default function SignUpScreen() {
             </View>
           ) : null}
 
-          <View style={styles.nameRow}>
-            <TextInput
-              placeholder="First Name"
-              placeholderTextColor="#687076"
-              value={firstname}
-              onChangeText={setFirstname}
-              autoCapitalize="words"
-              autoComplete="given-name"
-              style={[styles.input, styles.inputHalf]}
-              editable={!loading && !googleLoading}
-            />
-            <TextInput
-              placeholder="Last Name"
-              placeholderTextColor="#687076"
-              value={lastname}
-              onChangeText={setLastname}
-              autoCapitalize="words"
-              autoComplete="family-name"
-              style={[styles.input, styles.inputHalf]}
-              editable={!loading && !googleLoading}
-            />
-          </View>
+          {view === 'sign-up' && (
+            <View style={styles.nameRow}>
+              <TextInput
+                placeholder="First Name"
+                placeholderTextColor="#687076"
+                value={firstname}
+                onChangeText={setFirstname}
+                autoCapitalize="words"
+                autoComplete="given-name"
+                style={[styles.input, styles.inputHalf]}
+                editable={!isBusy}
+              />
+              <TextInput
+                placeholder="Last Name"
+                placeholderTextColor="#687076"
+                value={lastname}
+                onChangeText={setLastname}
+                autoCapitalize="words"
+                autoComplete="family-name"
+                style={[styles.input, styles.inputHalf]}
+                editable={!isBusy}
+              />
+            </View>
+          )}
 
           <TextInput
             placeholder="Email Address"
@@ -137,7 +162,7 @@ export default function SignUpScreen() {
             autoCapitalize="none"
             autoComplete="email"
             style={styles.input}
-            editable={!loading && !googleLoading}
+            editable={!isBusy}
           />
 
           <View style={styles.passwordWrap}>
@@ -147,9 +172,9 @@ export default function SignUpScreen() {
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!passwordVisible}
-              autoComplete="new-password"
+              autoComplete={view === 'sign-in' ? 'password' : 'new-password'}
               style={styles.passwordInput}
-              editable={!loading && !googleLoading}
+              editable={!isBusy}
             />
             <Pressable
               onPress={() => setPasswordVisible((v) => !v)}
@@ -164,68 +189,71 @@ export default function SignUpScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.passwordWrap}>
-            <TextInput
-              placeholder="Confirm Password"
-              placeholderTextColor="#687076"
-              value={passwordConfirmation}
-              onChangeText={setPasswordConfirmation}
-              secureTextEntry={!confirmPasswordVisible}
-              autoComplete="new-password"
-              style={styles.passwordInput}
-              editable={!loading && !googleLoading}
-            />
-            <Pressable
-              onPress={() => setConfirmPasswordVisible((v) => !v)}
-              style={styles.passwordToggle}
-              accessibilityLabel={confirmPasswordVisible ? 'Hide password' : 'Show password'}
-              accessibilityRole="button">
-              {confirmPasswordVisible ? (
-                <EyeOff size={18} color="#6b7280" />
-              ) : (
-                <Eye size={18} color="#6b7280" />
-              )}
-            </Pressable>
-          </View>
+          {view === 'sign-up' && (
+            <View style={styles.passwordWrap}>
+              <TextInput
+                placeholder="Confirm Password"
+                placeholderTextColor="#687076"
+                value={passwordConfirmation}
+                onChangeText={setPasswordConfirmation}
+                secureTextEntry={!confirmPasswordVisible}
+                autoComplete="new-password"
+                style={styles.passwordInput}
+                editable={!isBusy}
+              />
+              <Pressable
+                onPress={() => setConfirmPasswordVisible((v) => !v)}
+                style={styles.passwordToggle}
+                accessibilityLabel={confirmPasswordVisible ? 'Hide password' : 'Show password'}
+                accessibilityRole="button">
+                {confirmPasswordVisible ? (
+                  <EyeOff size={18} color="#6b7280" />
+                ) : (
+                  <Eye size={18} color="#6b7280" />
+                )}
+              </Pressable>
+            </View>
+          )}
 
           <Pressable
-            onPress={handleSubmit}
-            disabled={loading || googleLoading}
-            style={[
-              styles.primaryBtn,
-              (loading || googleLoading) && styles.disabled,
-            ]}>
+            onPress={view === 'sign-in' ? handleSignIn : handleSignUp}
+            disabled={isBusy}
+            style={[styles.primaryBtn, isBusy && styles.disabled]}>
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <ThemedText style={styles.primaryBtnText}>Sign Up</ThemedText>
+              <ThemedText style={styles.primaryBtnText}>
+                {view === 'sign-in' ? 'Sign In' : 'Sign Up'}
+              </ThemedText>
             )}
           </Pressable>
 
           <Pressable
             onPress={handleGoogle}
-            disabled={loading || googleLoading}
-            style={[styles.googleBtn, (loading || googleLoading) && styles.disabled]}>
+            disabled={isBusy}
+            style={[styles.googleBtn, isBusy && styles.disabled]}>
             {googleLoading ? (
               <ActivityIndicator color="#11181C" />
             ) : (
               <>
                 <GoogleIcon size={20} />
-                <ThemedText style={styles.googleBtnText}>Sign up with Google</ThemedText>
+                <ThemedText style={styles.googleBtnText}>
+                  {view === 'sign-in' ? 'Sign in with Google' : 'Sign up with Google'}
+                </ThemedText>
               </>
             )}
           </Pressable>
         </View>
 
         <View style={styles.cardFooter}>
-          <ThemedText style={styles.footerText}>Already have an account? </ThemedText>
-          <Link href="/auth/sign-in" asChild>
-            <Pressable hitSlop={8}>
-              <ThemedText style={[styles.footerLink, { color: primary }]}>
-                Log In
-              </ThemedText>
-            </Pressable>
-          </Link>
+          <ThemedText style={styles.footerText}>
+            {view === 'sign-in' ? "Don't have an account yet? " : 'Already have an account? '}
+          </ThemedText>
+          <Pressable hitSlop={8} onPress={() => setView(view === 'sign-in' ? 'sign-up' : 'sign-in')}>
+            <ThemedText style={[styles.footerLink, { color: primary }]}>
+              {view === 'sign-in' ? 'Sign Up' : 'Log In'}
+            </ThemedText>
+          </Pressable>
         </View>
       </View>
     </ScrollView>
@@ -300,6 +328,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 16,
+    marginBottom: 16,
   },
   inputHalf: { flex: 1 },
   passwordWrap: {
@@ -330,7 +359,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    backgroundColor: SECONDARY_BUTTON_BG,
+    backgroundColor: '#ffd814',
   },
   primaryBtnText: {
     fontFamily: FontFamilies.bodySemiBold,
