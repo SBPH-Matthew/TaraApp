@@ -1,6 +1,9 @@
 import { AppIcon } from '@/components/ui/app-icon';
+import { MobileMenuSheet } from '@/components/mobile-menu-sheet';
 import { BACKGROUND, FontFamilies } from '@/constants/theme';
+import { terminals } from '@/constants/terminals';
 import { Link } from "expo-router";
+import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -8,18 +11,39 @@ import { ThemedText } from "@/components/themed-text";
 
 /**
  * Mobile top bar with safe-area handling and floating search input.
- * Search is positioned to overlap the lower boundary of the blue app bar.
+ * Tapping the departing terminal area opens the preferences bottom sheet.
  */
 export function MobileHeader() {
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [selectedTerminal, setSelectedTerminal] = useState("mnl-t1");
+  const [selectedCurrency, setSelectedCurrency] = useState("php");
+  const [selectedLanguage, setSelectedLanguage] = useState("ph");
+
+  const openSheet = useCallback(() => setSheetVisible(true), []);
+  const closeSheet = useCallback(() => setSheetVisible(false), []);
+
+  const terminal = terminals.find((t) => t.id === selectedTerminal);
+  const terminalLabel = terminal?.shortName ?? terminal?.name ?? "Select Terminal";
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.wrap}>
         <View style={styles.topBlue}>
           <View style={styles.row}>
-            <Pressable style={styles.departBtn}>
+            <Pressable
+              style={styles.departBtn}
+              onPress={openSheet}
+              accessibilityLabel="Open menu to change departing terminal"
+            >
               <ThemedText style={styles.departLabel}>Departing</ThemedText>
               <View style={styles.termRow}>
-                <ThemedText style={styles.termText}>NAIA Terminal 1</ThemedText>
+                <ThemedText
+                  style={styles.termText}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {terminalLabel}
+                </ThemedText>
                 <AppIcon
                   name="keyboard-arrow-down"
                   size={20}
@@ -77,6 +101,17 @@ export function MobileHeader() {
           </View>
         </View>
       </View>
+
+      <MobileMenuSheet
+        visible={sheetVisible}
+        onClose={closeSheet}
+        selectedTerminal={selectedTerminal}
+        onTerminalChange={setSelectedTerminal}
+        selectedCurrency={selectedCurrency}
+        onCurrencyChange={setSelectedCurrency}
+        selectedLanguage={selectedLanguage}
+        onLanguageChange={setSelectedLanguage}
+      />
     </SafeAreaView>
   );
 }
@@ -100,7 +135,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  departBtn: { height: 56, justifyContent: "center" },
+  departBtn: { height: 56, justifyContent: "center", flex: 1, maxWidth: "70%" },
   departLabel: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
@@ -113,6 +148,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     lineHeight: 22,
+    flexShrink: 1,
   },
   actions: { flexDirection: "row", alignItems: "center", gap: 6 },
   iconBtn: {
