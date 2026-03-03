@@ -65,6 +65,15 @@ export default function RootLayout() {
                 }}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="gifts" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="basket"
+                  options={{
+                    title: 'Basket',
+                    headerStyle: { backgroundColor: '#1130bc' },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: { fontWeight: '600' },
+                  }}
+                />
                 <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
               </Stack>
               <StatusBar style="auto" />

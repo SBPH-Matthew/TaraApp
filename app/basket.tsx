@@ -1,131 +1,202 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from "react";
 import {
+  Dimensions,
   Image,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
-} from 'react-native';
-import { Link } from 'expo-router';
-import { AppIcon } from '@/components/ui/app-icon';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+} from "react-native";
+import { Link } from "expo-router";
+import { AppIcon } from "@/components/ui/app-icon";
+import { ThemedText } from "@/components/themed-text";
+import { BACKGROUND, FontFamilies } from "@/constants/theme";
+import { DUTY_FREE_SHOP_URL } from "@/services/dutyFreeProducts";
 
 type BasketItem = { id: string; name: string; price: number; image: string };
 
 const INITIAL_ITEMS: BasketItem[] = [
   {
-    id: 'choco-1',
-    name: 'Premium Chocolate Box',
+    id: "choco-1",
+    name: "Premium Chocolate Box",
     price: 500,
-    image: 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=200&q=80',
+    image:
+      "https://images.unsplash.com/photo-1549007994-cb92caebd54b?auto=format&fit=crop&w=900&q=80",
   },
   {
-    id: 'choco-2',
-    name: 'Premium Chocolate Box',
+    id: "choco-2",
+    name: "Premium Chocolate Box",
     price: 500,
-    image: 'https://images.unsplash.com/photo-1481391032119-d89fee407e44?w=200&q=80',
+    image:
+      "https://images.unsplash.com/photo-1481391032119-d89fee407e44?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "choco-3",
+    name: "Premium Chocolate Box",
+    price: 500,
+    image:
+      "https://images.unsplash.com/photo-1505575967455-40e256f73376?auto=format&fit=crop&w=900&q=80",
   },
 ];
 
 const SUGGESTIONS: BasketItem[] = [
-  { id: 's1', name: 'Premium Chocolate Box', price: 500, image: 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=200&q=80' },
-  { id: 's2', name: 'Premium Chocolate Box', price: 500, image: 'https://images.unsplash.com/photo-1481391032119-d89fee407e44?w=200&q=80' },
-  { id: 's3', name: 'Premium Chocolate Box', price: 500, image: 'https://images.unsplash.com/photo-1505575967455-40e256f73376?w=200&q=80' },
+  {
+    id: "s1",
+    name: "Premium Chocolate Box",
+    price: 500,
+    image:
+      "https://images.unsplash.com/photo-1549007994-cb92caebd54b?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "s2",
+    name: "Premium Chocolate Box",
+    price: 500,
+    image:
+      "https://images.unsplash.com/photo-1481391032119-d89fee407e44?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "s3",
+    name: "Premium Chocolate Box",
+    price: 500,
+    image:
+      "https://images.unsplash.com/photo-1505575967455-40e256f73376?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "s4",
+    name: "Premium Chocolate Box",
+    price: 500,
+    image:
+      "https://images.unsplash.com/photo-1500835556837-99ac94a94552?auto=format&fit=crop&w=900&q=80",
+  },
 ];
 
-const PAYMENT_METHODS = ['Visa', 'Amex', 'Mastercard', 'PayPal', 'GCash', 'Maya'];
+const PAYMENT_METHODS = [
+  "Visa",
+  "Amex",
+  "Mastercard",
+  "PayPal",
+  "JCB",
+  "GCash",
+  "Maya",
+  "QRPH",
+];
 
 function formatPrice(value: number) {
-  return `₱${value.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `₱${value.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = 280;
 
-/**
- * Basket – parity with companion-app /basket (mobile).
- * Breadcrumb, MY BASKET, product list (image, qty -/+, delete), summary card, You Might Also Like, View More.
- */
 export default function BasketScreen() {
   const [items, setItems] = useState(INITIAL_ITEMS);
   const [quantities, setQuantities] = useState<Record<string, number>>(() => {
     const map: Record<string, number> = {};
-    INITIAL_ITEMS.forEach((item) => { map[item.id] = 1; });
+    INITIAL_ITEMS.forEach((item) => {
+      map[item.id] = 1;
+    });
     return map;
   });
-  const colorScheme = useColorScheme();
-  const primary = Colors[colorScheme ?? 'light'].primary;
+  const suggestRef = useRef<ScrollView>(null);
 
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + item.price * (quantities[item.id] ?? 1), 0),
-    [items, quantities]
+    () =>
+      items.reduce(
+        (sum, item) => sum + item.price * (quantities[item.id] ?? 1),
+        0,
+      ),
+    [items, quantities],
   );
   const discount = 0;
   const total = Math.max(0, subtotal - discount);
 
   const handleQty = (id: string, delta: number) => {
-    setQuantities((prev) => ({ ...prev, [id]: Math.max(1, (prev[id] ?? 1) + delta) }));
+    setQuantities((prev) => ({
+      ...prev,
+      [id]: Math.max(1, (prev[id] ?? 1) + delta),
+    }));
   };
+
   const handleRemove = (id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
-    setQuantities((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    setQuantities((prev) => {
+      const n = { ...prev };
+      delete n[id];
+      return n;
+    });
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={s.page}>
+      <ScrollView
+        contentContainerStyle={s.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Breadcrumb + title */}
-        <View style={styles.breadcrumb}>
+        <View style={s.breadcrumb}>
           <Link href="/gifts" asChild>
             <Pressable>
-              <ThemedText style={styles.breadcrumbLink}>Gifts & More</ThemedText>
+              <ThemedText style={s.breadcrumbLink}>Gifts & More</ThemedText>
             </Pressable>
           </Link>
-          <ThemedText style={styles.breadcrumbSep}> › </ThemedText>
-          <ThemedText type="defaultSemiBold">My Basket</ThemedText>
+          <ThemedText style={s.breadcrumbSep}> › </ThemedText>
+          <ThemedText style={s.breadcrumbActive}>My Basket</ThemedText>
         </View>
-        <ThemedText type="title" style={[styles.pageTitle, { color: primary }]}>
-          MY BASKET
-        </ThemedText>
+        <ThemedText style={s.pageTitle}>MY BASKET</ThemedText>
 
         {/* Product list */}
-        <View style={styles.productList}>
-          {items.map((item) => (
-            <View key={item.id} style={styles.productRow}>
-              <Image source={{ uri: item.image }} style={styles.productImage} />
-              <View style={styles.productBody}>
-                <ThemedText type="defaultSemiBold" style={styles.productName}>{item.name}</ThemedText>
-                <ThemedText style={styles.productPrice}>{formatPrice(item.price)}</ThemedText>
-                <View style={styles.qtyRow}>
-                  <View style={styles.qtyControls}>
+        <View style={s.productList}>
+          {items.map((item, index) => (
+            <View
+              key={item.id}
+              style={[s.productRow, index === 0 && { paddingTop: 0 }]}
+            >
+              <Image source={{ uri: item.image }} style={s.productImage} />
+              <View style={s.productBody}>
+                <ThemedText style={s.productName}>{item.name}</ThemedText>
+                <ThemedText style={s.productPrice}>
+                  {formatPrice(item.price)}
+                </ThemedText>
+                <View style={s.qtyRow}>
+                  <View style={s.qtyControls}>
                     <Pressable
                       onPress={() => handleQty(item.id, -1)}
-                      style={({ pressed }) => [styles.qtyBtn, pressed && styles.pressed]}
+                      style={({ pressed }) => [
+                        s.qtyBtn,
+                        pressed && s.pressed,
+                      ]}
                       accessibilityLabel="Decrease quantity"
                     >
-                      <AppIcon name="remove" size={20} color="#687076" />
+                      <AppIcon name="remove" size={16} color="#687076" />
                     </Pressable>
-                    <ThemedText type="defaultSemiBold" style={styles.qtyNum}>
+                    <ThemedText style={s.qtyNum}>
                       {quantities[item.id] ?? 1}
                     </ThemedText>
                     <Pressable
                       onPress={() => handleQty(item.id, 1)}
-                      style={({ pressed }) => [styles.qtyBtn, pressed && styles.pressed]}
+                      style={({ pressed }) => [
+                        s.qtyBtn,
+                        pressed && s.pressed,
+                      ]}
                       accessibilityLabel="Increase quantity"
                     >
-                      <AppIcon name="add" size={20} color="#687076" />
+                      <AppIcon name="add" size={16} color="#687076" />
                     </Pressable>
                   </View>
                   <Pressable
                     onPress={() => handleRemove(item.id)}
-                    style={({ pressed }) => [styles.deleteBtn, pressed && styles.pressed]}
+                    style={({ pressed }) => [
+                      s.deleteBtn,
+                      pressed && s.pressed,
+                    ]}
                     accessibilityLabel="Remove item"
                   >
-                    <AppIcon name="delete-outline" size={20} color="#687076" />
+                    <AppIcon name="delete-outline" size={16} color="#687076" />
                   </Pressable>
                 </View>
               </View>
@@ -134,158 +205,476 @@ export default function BasketScreen() {
         </View>
 
         {/* Summary card */}
-        <View style={styles.summaryCard}>
-          <ThemedText type="defaultSemiBold" style={styles.summaryHeading}>Discount</ThemedText>
+        <View style={s.summaryCard}>
+          <ThemedText style={s.summaryHeading}>Discount</ThemedText>
           <TextInput
             placeholder="Enter Code"
             placeholderTextColor="#687076"
-            style={styles.discountInput}
+            style={s.discountInput}
           />
-          <ThemedText type="defaultSemiBold" style={[styles.summaryHeading, { marginTop: 16 }]}>
+
+          <ThemedText style={[s.summaryHeading, { marginTop: 24 }]}>
             Total
           </ThemedText>
-          <View style={styles.totalRow}>
-            <ThemedText style={styles.totalLabel}>Subtotal</ThemedText>
-            <ThemedText type="defaultSemiBold">{formatPrice(subtotal)}</ThemedText>
+          <View style={s.totalRow}>
+            <ThemedText style={s.totalLabel}>Subtotal</ThemedText>
+            <ThemedText style={s.totalValue}>{formatPrice(subtotal)}</ThemedText>
           </View>
-          <View style={styles.totalRow}>
-            <ThemedText style={styles.totalLabel}>Discount</ThemedText>
-            <ThemedText type="defaultSemiBold">{formatPrice(discount)}</ThemedText>
+          <View style={s.totalRow}>
+            <ThemedText style={s.totalLabel}>Discount</ThemedText>
+            <ThemedText style={s.totalValue}>
+              {formatPrice(discount)}
+            </ThemedText>
           </View>
-          <View style={[styles.totalRow, styles.totalRowFinal]}>
-            <ThemedText type="defaultSemiBold">Total</ThemedText>
-            <ThemedText type="defaultSemiBold">{formatPrice(total)}</ThemedText>
-          </View>
-          <ThemedText style={[styles.weAccept, { marginTop: 16 }]}>WE ACCEPT</ThemedText>
-          <View style={styles.paymentBadges}>
-            {PAYMENT_METHODS.slice(0, 6).map((m) => (
-              <View key={m} style={styles.badge}>
-                <ThemedText style={styles.badgeText}>{m}</ThemedText>
-              </View>
-            ))}
-          </View>
-          <Link href="/checkout" asChild>
-            <Pressable style={[styles.checkoutBtn, { marginTop: 16 }]}>
-              <ThemedText type="defaultSemiBold" style={styles.checkoutBtnText}>Checkout</ThemedText>
-            </Pressable>
-          </Link>
-          <Link href="/gifts" asChild>
-            <Pressable style={styles.continueBtn}>
-              <ThemedText type="defaultSemiBold" style={styles.continueBtnText}>
-                Continue Shopping
+          <View style={s.totalRow}>
+            <ThemedText style={s.totalLabel}>Delivery</ThemedText>
+            <View style={s.deliveryHint}>
+              <AppIcon name="info-outline" size={14} color="#687076" />
+              <ThemedText style={s.deliveryHintText}>
+                Options available at checkout
               </ThemedText>
-            </Pressable>
-          </Link>
+            </View>
+          </View>
+          <View style={s.totalRowFinal}>
+            <ThemedText style={s.totalFinalLabel}>Total</ThemedText>
+            <ThemedText style={s.totalFinalValue}>
+              {formatPrice(total)}
+            </ThemedText>
+          </View>
+
+          <View style={s.paymentSection}>
+            <ThemedText style={s.weAccept}>WE ACCEPT</ThemedText>
+            <View style={s.paymentBadges}>
+              {PAYMENT_METHODS.map((m) => (
+                <View key={m} style={s.badge}>
+                  <ThemedText style={s.badgeText}>{m}</ThemedText>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={s.actionsSection}>
+            <Link href="/checkout" asChild>
+              <Pressable style={s.checkoutBtn}>
+                <ThemedText style={s.checkoutBtnText}>Checkout</ThemedText>
+              </Pressable>
+            </Link>
+            <Link href="/gifts" asChild>
+              <Pressable style={s.continueBtn}>
+                <ThemedText style={s.continueBtnText}>
+                  Continue Shopping
+                </ThemedText>
+              </Pressable>
+            </Link>
+          </View>
         </View>
 
         {/* You Might Also Like */}
-        <View style={styles.alsoLike}>
-          <ThemedText type="title" style={[styles.alsoLikeTitle, { color: primary }]}>
-            YOU MIGHT ALSO LIKE
-          </ThemedText>
+        <View style={s.alsoLike}>
+          <ThemedText style={s.alsoLikeTitle}>YOU MIGHT ALSO LIKE</ThemedText>
+
           <ScrollView
+            ref={suggestRef}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.alsoLikeScroll}
+            contentContainerStyle={s.alsoLikeScroll}
+            decelerationRate="fast"
+            snapToInterval={CARD_WIDTH + 16}
           >
             {SUGGESTIONS.map((item) => (
-              <View key={item.id} style={styles.suggestCard}>
-                <Image source={{ uri: item.image }} style={styles.suggestImage} />
-                <View style={styles.suggestBody}>
-                  <ThemedText type="defaultSemiBold" style={styles.suggestName}>{item.name}</ThemedText>
-                  <ThemedText style={styles.suggestPrice}>{formatPrice(item.price)}</ThemedText>
-                  <Pressable style={[styles.addBtn, { backgroundColor: primary }]}>
-                    <ThemedText style={styles.addBtnText}>Add</ThemedText>
+              <Pressable
+                key={item.id}
+                style={s.suggestCard}
+                onPress={() => Linking.openURL(DUTY_FREE_SHOP_URL)}
+                accessibilityLabel={`View ${item.name}`}
+                accessibilityRole="link"
+              >
+                <View style={s.suggestImageWrap}>
+                  <Image
+                    source={{ uri: item.image }}
+                    style={s.suggestImage}
+                  />
+                  <View style={s.badgesRow}>
+                    <View style={s.exclusiveBadge}>
+                      <ThemedText style={s.exclusiveBadgeText}>
+                        Exclusive
+                      </ThemedText>
+                    </View>
+                    <View style={s.earnBadge}>
+                      <AppIcon name="star" size={12} color="#fff" />
+                      <ThemedText style={s.earnBadgeText}>
+                        Earn Points!
+                      </ThemedText>
+                    </View>
+                  </View>
+                </View>
+                <View style={s.suggestBody}>
+                  <ThemedText style={s.suggestName}>{item.name}</ThemedText>
+                  <ThemedText style={s.suggestPrice}>
+                    {formatPrice(item.price)}
+                  </ThemedText>
+                  <Pressable
+                    style={s.addBtn}
+                    onPress={() => Linking.openURL(DUTY_FREE_SHOP_URL)}
+                  >
+                    <ThemedText style={s.addBtnText}>Add</ThemedText>
                     <AppIcon name="shopping-cart" size={16} color="#fff" />
                   </Pressable>
                 </View>
-              </View>
+              </Pressable>
             ))}
           </ScrollView>
-          <Link href="/gifts/all" asChild>
-            <Pressable style={styles.viewMore}>
-              <ThemedText type="defaultSemiBold" style={[styles.viewMoreText, { color: primary }]}>
-                View More
-              </ThemedText>
-              <AppIcon name="arrow-forward" size={16} color={primary} />
-            </Pressable>
-          </Link>
+
+          <Pressable
+            style={s.viewMore}
+            onPress={() => Linking.openURL(DUTY_FREE_SHOP_URL)}
+          >
+            <ThemedText style={s.viewMoreText}>View More</ThemedText>
+            <AppIcon name="arrow-forward" size={16} color="#1130bc" />
+          </Pressable>
         </View>
       </ScrollView>
-    </ThemedView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 48 },
+const PRIMARY = "#1130bc";
+
+const s = StyleSheet.create({
+  page: { flex: 1, backgroundColor: BACKGROUND },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 120 },
-  breadcrumb: { flexDirection: 'row', alignItems: 'center', marginTop: 24 },
-  breadcrumbLink: { fontSize: 12, color: '#687076' },
-  breadcrumbSep: { fontSize: 12, color: '#687076', marginHorizontal: 4 },
-  pageTitle: { fontSize: 24, fontWeight: 'bold', textTransform: 'uppercase', marginTop: 12 },
-  productList: { marginTop: 24, borderBottomWidth: 1, borderBottomColor: '#e4e4e7' },
+
+  breadcrumb: { flexDirection: "row", alignItems: "center", marginTop: 16 },
+  breadcrumbLink: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    color: "#687076",
+  },
+  breadcrumbSep: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    color: "#687076",
+    marginHorizontal: 4,
+  },
+  breadcrumbActive: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 12,
+    color: "#11181C",
+  },
+  pageTitle: {
+    fontFamily: FontFamilies.header,
+    fontSize: 24,
+    color: PRIMARY,
+    textTransform: "uppercase",
+    letterSpacing: -0.4,
+    marginTop: 12,
+  },
+
+  productList: { marginTop: 24 },
   productRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e4e4e7',
+    borderBottomColor: "#e4e4e7",
   },
-  productImage: { width: 80, height: 80, borderRadius: 8, backgroundColor: '#f4f4f5' },
-  productBody: { flex: 1 },
-  productName: { fontSize: 14 },
-  productPrice: { fontSize: 14, color: '#687076', marginTop: 4 },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 12 },
-  qtyControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e4e4e7',
+  productImage: {
+    width: 80,
+    height: 80,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e4e4e7",
+    backgroundColor: "#f4f4f5",
   },
-  qtyBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  pressed: { opacity: 0.8 },
-  qtyNum: { minWidth: 32, textAlign: 'center', fontSize: 14 },
-  deleteBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e4e4e7', borderRadius: 8 },
+  productBody: { flex: 1 },
+  productName: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#11181C",
+  },
+  productPrice: {
+    fontFamily: FontFamilies.body,
+    fontSize: 14,
+    color: "#687076",
+    marginTop: 2,
+  },
+  qtyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+    gap: 12,
+  },
+  qtyControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e4e4e7",
+    borderRadius: 6,
+  },
+  qtyBtn: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  qtyNum: {
+    fontFamily: FontFamilies.bodySemiBold,
+    minWidth: 32,
+    textAlign: "center",
+    fontSize: 14,
+  },
+  deleteBtn: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#e4e4e7",
+    borderRadius: 6,
+  },
+  pressed: { opacity: 0.7 },
+
   summaryCard: {
-    marginTop: 24,
+    marginTop: 32,
     padding: 20,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e4e4e7',
-    backgroundColor: '#fff',
+    borderColor: "#e4e4e7",
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  summaryHeading: { fontSize: 14 },
+  summaryHeading: {
+    fontFamily: FontFamilies.bodyBold,
+    fontSize: 14,
+    color: "#11181C",
+  },
   discountInput: {
+    fontFamily: FontFamilies.body,
     height: 44,
     borderWidth: 1,
-    borderColor: '#e4e4e7',
+    borderColor: "#e4e4e7",
     borderRadius: 8,
     marginTop: 8,
     paddingHorizontal: 12,
     fontSize: 16,
+    color: "#11181C",
   },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  totalLabel: { fontSize: 14, color: '#687076' },
-  totalRowFinal: { borderTopWidth: 1, borderTopColor: '#e4e4e7', paddingTop: 12, marginTop: 12 },
-  weAccept: { fontSize: 11, fontWeight: 'bold', letterSpacing: 1, color: '#687076' },
-  paymentBadges: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
-  badge: { borderWidth: 1, borderColor: '#e4e4e7', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
-  badgeText: { fontSize: 11, fontWeight: '600', color: '#687076' },
-  checkoutBtn: { height: 48, backgroundColor: '#ffd814', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  checkoutBtnText: { color: '#11181C', fontSize: 16 },
-  continueBtn: { height: 48, borderWidth: 1, borderColor: '#e4e4e7', borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
-  continueBtnText: { fontSize: 16 },
-  alsoLike: { marginTop: 40, paddingTop: 24, borderTopWidth: 1, borderTopColor: '#e4e4e7' },
-  alsoLikeTitle: { fontSize: 28, fontWeight: '600', textTransform: 'uppercase' },
-  alsoLikeScroll: { marginTop: 16, gap: 16, paddingRight: 16 },
-  suggestCard: { width: CARD_WIDTH, borderRadius: 12, borderWidth: 1, borderColor: '#e4e4e7', overflow: 'hidden', backgroundColor: '#fff' },
-  suggestImage: { width: CARD_WIDTH, height: CARD_WIDTH * 0.75, backgroundColor: '#f4f4f5' },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  totalLabel: {
+    fontFamily: FontFamilies.body,
+    fontSize: 14,
+    color: "#687076",
+  },
+  totalValue: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#11181C",
+  },
+  deliveryHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  deliveryHintText: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    color: "#687076",
+  },
+  totalRowFinal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderTopColor: "#e4e4e7",
+    paddingTop: 12,
+    marginTop: 12,
+  },
+  totalFinalLabel: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 16,
+    color: "#11181C",
+  },
+  totalFinalValue: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 16,
+    color: "#11181C",
+  },
+  paymentSection: {
+    borderTopWidth: 1,
+    borderTopColor: "#e4e4e7",
+    paddingTop: 16,
+    marginTop: 16,
+  },
+  weAccept: {
+    fontFamily: FontFamilies.bodyBold,
+    fontSize: 11,
+    letterSpacing: 1,
+    color: "#11181C",
+    textTransform: "uppercase",
+  },
+  paymentBadges: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+  badge: {
+    borderWidth: 1,
+    borderColor: "#e4e4e7",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  badgeText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 11,
+    color: "#687076",
+  },
+  actionsSection: {
+    borderTopWidth: 1,
+    borderTopColor: "#e4e4e7",
+    paddingTop: 16,
+    marginTop: 16,
+    gap: 12,
+  },
+  checkoutBtn: {
+    height: 48,
+    backgroundColor: "#ffd814",
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkoutBtnText: {
+    fontFamily: FontFamilies.bodyBold,
+    color: "#11181C",
+    fontSize: 16,
+  },
+  continueBtn: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#e4e4e7",
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  continueBtnText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 16,
+    color: "#11181C",
+  },
+
+  alsoLike: {
+    marginTop: 40,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: "#e4e4e7",
+  },
+  alsoLikeTitle: {
+    fontFamily: FontFamilies.header,
+    fontSize: 32,
+    color: PRIMARY,
+    textTransform: "uppercase",
+    letterSpacing: -1.5,
+  },
+  alsoLikeScroll: { marginTop: 24, gap: 16, paddingRight: 16 },
+
+  suggestCard: {
+    width: CARD_WIDTH,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e4e4e7",
+    overflow: "hidden",
+    backgroundColor: "#fff",
+  },
+  suggestImageWrap: {
+    position: "relative",
+    width: CARD_WIDTH,
+    height: CARD_WIDTH * 0.75,
+    backgroundColor: "#f4f4f5",
+  },
+  suggestImage: {
+    width: "100%",
+    height: "100%",
+  },
+  badgesRow: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    flexDirection: "row",
+    gap: 8,
+  },
+  exclusiveBadge: {
+    backgroundColor: "#ffd814",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  exclusiveBadgeText: {
+    fontFamily: FontFamilies.bodyBold,
+    fontSize: 11,
+    color: "#11181C",
+  },
+  earnBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: PRIMARY,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  earnBadgeText: {
+    fontFamily: FontFamilies.bodyBold,
+    fontSize: 11,
+    color: "#fff",
+  },
   suggestBody: { padding: 16 },
-  suggestName: { fontSize: 14 },
-  suggestPrice: { fontSize: 14, color: '#687076', marginTop: 4 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 36, borderRadius: 8, marginTop: 12 },
-  addBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
-  viewMore: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 24, alignSelf: 'flex-end', minHeight: 44 },
-  viewMoreText: { fontSize: 16 },
+  suggestName: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#11181C",
+  },
+  suggestPrice: {
+    fontFamily: FontFamilies.body,
+    fontSize: 14,
+    color: "#687076",
+    marginTop: 2,
+  },
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    height: 36,
+    borderRadius: 8,
+    marginTop: 16,
+    backgroundColor: PRIMARY,
+  },
+  addBtnText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    color: "#fff",
+    fontSize: 14,
+  },
+
+  viewMore: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 32,
+    alignSelf: "flex-end",
+    minHeight: 44,
+  },
+  viewMoreText: {
+    fontFamily: FontFamilies.bodyBold,
+    fontSize: 16,
+    color: PRIMARY,
+  },
 });
