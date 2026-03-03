@@ -1,5 +1,5 @@
 import { AppIcon } from "@/components/ui/app-icon";
-import { CircleArrowColors, FontFamilies, TrackColors } from "@/constants/theme";
+import { BACKGROUND, CircleArrowColors, FontFamilies, TrackColors } from "@/constants/theme";
 import { Link } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -235,7 +235,7 @@ function HorizontalCategories() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#efefef" },
+  page: { flex: 1, backgroundColor: BACKGROUND },
   content: { paddingBottom: 92 },
   heroWrap: { position: "relative" },
   heroSlide: { height: 250 },

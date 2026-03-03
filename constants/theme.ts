@@ -9,6 +9,9 @@ import { Platform } from "react-native";
 const tintColorLight = "#0B3BA7";
 const tintColorDark = "#5B9AFF";
 
+/** Page/screen background – matches companion-app --background (#FDFDFD) */
+export const BACKGROUND = "#FDFDFD";
+
 /** Companion-app: circle nav buttons – border secondary-foreground, icon muted-foreground */
 export const CircleArrowColors = {
   border: "#7e7e7e",
@@ -24,7 +27,7 @@ export const TrackColors = {
 export const Colors = {
   light: {
     text: "#11181C",
-    background: "#fff",
+    background: BACKGROUND,
     tint: tintColorLight,
     icon: "#687076",
     tabIconDefault: "#687076",

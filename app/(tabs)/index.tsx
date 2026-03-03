@@ -1,8 +1,8 @@
 import { AppIcon } from "@/components/ui/app-icon";
-import { CircleArrowColors, FontFamilies, TrackColors } from "@/constants/theme";
+import { BACKGROUND, CircleArrowColors, FontFamilies, TrackColors } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, router } from "expo-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -16,8 +16,17 @@ import {
 } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
+import {
+  type DutyFreeProduct,
+  useFeaturedProducts,
+} from "@/services/dutyFreeProducts";
+import {
+  GIFT_PLACEHOLDER_IMAGE,
+  useStorefrontProducts,
+} from "@/services/shopifyStorefront";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const PRODUCT_CARD_WIDTH = SCREEN_WIDTH * 0.72;
 
 const HERO_IMAGES = [
   require("@/assets/images/migration/TaraBanner1.png"),
@@ -40,6 +49,28 @@ const PRODUCT_CARDS = [
   {
     id: "prod-2",
     label: "Gifts & More",
+    image: require("@/assets/images/migration/GiftHampers.png"),
+  },
+];
+
+type GiftCardItem = {
+  id: string;
+  name: string;
+  price: string;
+  image: number | string;
+};
+
+const GIFT_CARDS: GiftCardItem[] = [
+  {
+    id: "gift-1",
+    name: "Duty Free Picks",
+    price: "$24.00",
+    image: require("@/assets/images/migration/hero-mobile-1.png"),
+  },
+  {
+    id: "gift-2",
+    name: "Gift Hampers & Baskets",
+    price: "$45.00",
     image: require("@/assets/images/migration/GiftHampers.png"),
   },
 ];
@@ -296,6 +327,7 @@ export default function HomeScreen() {
       <SectionTitle
         title="SHOP DUTY FREE"
         subtitle="Browse premium brands and reserve your duty-free shopping ahead of time"
+        viewMoreHref="/shop"
       />
       <HorizontalProductCards />
 
@@ -311,7 +343,7 @@ export default function HomeScreen() {
         title="GIFTS & MORE!"
         subtitle="Perfect gifts for last-minute shoppers. Reserve ahead and collect at the airport."
       />
-      <HorizontalCards images={PRODUCT_CARDS.map((c) => c.image)} />
+      <HorizontalGiftCards />
     </ScrollView>
   );
 }
@@ -328,15 +360,25 @@ function Meta({ label, value }: { label: string; value: string }) {
 function SectionTitle({
   title,
   subtitle,
+  viewMoreHref,
 }: {
   title: string;
   subtitle?: string;
+  viewMoreHref?: string;
 }) {
   return (
     <View style={styles.sectionHeader}>
       <ThemedText style={styles.sectionTitle}>{title}</ThemedText>
       {subtitle ? (
         <ThemedText style={styles.sectionSubtitle}>{subtitle}</ThemedText>
+      ) : null}
+      {viewMoreHref ? (
+        <Link href={viewMoreHref as "/shop"} asChild>
+          <Pressable style={styles.viewMoreRow}>
+            <ThemedText style={styles.viewMoreText}>View More</ThemedText>
+            <AppIcon name="arrow-forward" size={16} color="#1130bc" />
+          </Pressable>
+        </Link>
       ) : null}
     </View>
   );
@@ -408,26 +450,107 @@ function HorizontalCards({
   );
 }
 
+const FALLBACK_DUTY_FREE: DutyFreeProduct[] = [
+  {
+    id: "fallback-1",
+    name: "Hawk's Nest Founder's Collection Kit",
+    price: "$34.20",
+    image:
+      "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=80",
+    slug: "hawks-nest-founders-collection",
+  },
+  {
+    id: "fallback-2",
+    name: "Kokavi G 3",
+    price: "$108.00",
+    image:
+      "https://images.unsplash.com/photo-1585386959984-a41552231606?auto=format&fit=crop&w=900&q=80",
+    slug: "kokavi-g-3",
+  },
+];
+
+const DUTY_FREE_PAGE_SIZE = 8;
+
+const PLACEHOLDER_IMAGE =
+  "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=80";
+
+type ProductCardItem = {
+  id: string;
+  name: string;
+  price: string;
+  image: number | string;
+};
+
+function ProductCard({
+  item,
+  width,
+}: {
+  item: ProductCardItem;
+  width: number;
+}) {
+  const [imageError, setImageError] = useState(false);
+  const isRemoteImage = typeof item.image === "string";
+  useEffect(() => {
+    setImageError(false);
+  }, [item.id, item.image]);
+  const imageSource =
+    typeof item.image === "string"
+      ? { uri: imageError ? PLACEHOLDER_IMAGE : (item.image || PLACEHOLDER_IMAGE) }
+      : item.image;
+  return (
+    <View style={[styles.productCard, { width }]}>
+      <View style={styles.productImageWrap}>
+        <Image
+          source={imageSource}
+          style={styles.productImage}
+          onError={isRemoteImage ? () => setImageError(true) : undefined}
+        />
+        <View style={styles.productBadges} pointerEvents="box-none">
+          <View style={styles.badgeExclusive}>
+            <ThemedText style={styles.badgeText}>Exclusive</ThemedText>
+          </View>
+          <View style={styles.badgeEarnPoints}>
+            <ThemedText style={styles.badgeEarnText}>Earn Points!</ThemedText>
+          </View>
+        </View>
+      </View>
+      <View style={styles.productContent}>
+        <View style={styles.productTitlePriceBlock}>
+          <ThemedText style={styles.productTitle} numberOfLines={2}>
+            {item.name}
+          </ThemedText>
+          <ThemedText style={styles.productPrice}>{item.price}</ThemedText>
+        </View>
+        <View style={styles.productActionsRow}>
+          <Pressable
+            style={styles.productHeartBtn}
+            accessibilityLabel="Add to wishlist"
+          >
+            <AppIcon name="favorite-border" size={20} color="#111827" />
+          </Pressable>
+          <Pressable style={styles.viewProductBtn}>
+            <AppIcon name="external-link" size={14} color="#fff" />
+            <ThemedText style={styles.viewProductText}>View product</ThemedText>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function HorizontalProductCards() {
   const scrollRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const products = [
-    {
-      id: "a",
-      title: "Hawk's Nest Founder's Collection Kit",
-      price: "₱5,821",
-      image: require("@/assets/images/migration/hero-mobile-1.png"),
-    },
-    {
-      id: "b",
-      title: "Kokavi G 3",
-      price: "₱4,740",
-      image: require("@/assets/images/migration/hero-mobile-2.png"),
-    },
-  ];
-  const cardWidth = 170;
+  const { data: featuredProducts, isSuccess } = useFeaturedProducts();
+  const products = useMemo((): DutyFreeProduct[] => {
+    if (isSuccess && featuredProducts && featuredProducts.length > 0) {
+      return featuredProducts.slice(0, DUTY_FREE_PAGE_SIZE);
+    }
+    return FALLBACK_DUTY_FREE;
+  }, [isSuccess, featuredProducts]);
+
   const gap = 10;
-  const itemSpan = cardWidth + gap;
+  const itemSpan = PRODUCT_CARD_WIDTH + gap;
   const maxIndex = Math.max(products.length - 1, 0);
   const fillRatio =
     products.length > 1 ? (activeIndex + 1) / products.length : 1;
@@ -451,18 +574,16 @@ function HorizontalProductCards() {
         }}
       >
         {products.map((product) => (
-          <View key={product.id} style={styles.productCard}>
-            <Image source={product.image} style={styles.productImage} />
-            <ThemedText style={styles.productTitle} numberOfLines={2}>
-              {product.title}
-            </ThemedText>
-            <ThemedText style={styles.productPrice}>{product.price}</ThemedText>
-            <Pressable style={styles.viewProductBtn}>
-              <ThemedText style={styles.viewProductText}>
-                View product
-              </ThemedText>
-            </Pressable>
-          </View>
+          <ProductCard
+            key={product.id}
+            item={{
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              image: product.image,
+            }}
+            width={PRODUCT_CARD_WIDTH}
+          />
         ))}
       </ScrollView>
       <View style={styles.sliderBottom}>
@@ -490,8 +611,89 @@ function HorizontalProductCards() {
   );
 }
 
+const GIFT_PAGE_SIZE = 12;
+
+function HorizontalGiftCards() {
+  const scrollRef = useRef<ScrollView>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const {
+    data: storefrontGifts,
+    isSuccess,
+    isError,
+    error,
+  } = useStorefrontProducts("az", GIFT_PAGE_SIZE);
+  const items = useMemo((): GiftCardItem[] => {
+    if (isSuccess && storefrontGifts && storefrontGifts.length > 0) {
+      return storefrontGifts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        price: p.price || "$0.00",
+        image: p.image || GIFT_PLACEHOLDER_IMAGE,
+      }));
+    }
+    return GIFT_CARDS;
+  }, [isSuccess, storefrontGifts]);
+  const gap = 10;
+  const itemSpan = PRODUCT_CARD_WIDTH + gap;
+  const maxIndex = Math.max(items.length - 1, 0);
+  const fillRatio = items.length > 1 ? (activeIndex + 1) / items.length : 1;
+
+  const goTo = (index: number) => {
+    const clamped = Math.max(0, Math.min(index, maxIndex));
+    scrollRef.current?.scrollTo({ x: clamped * itemSpan, animated: true });
+    setActiveIndex(clamped);
+  };
+
+  const errorMessage = isError && error ? (error as Error).message : null;
+
+  return (
+    <View style={styles.sliderWrap}>
+      {errorMessage ? (
+        <ThemedText style={styles.giftFetchError} type="default">
+          {errorMessage}
+        </ThemedText>
+      ) : null}
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.hScroll}
+        onMomentumScrollEnd={(event) => {
+          const next = Math.round(event.nativeEvent.contentOffset.x / itemSpan);
+          setActiveIndex(Math.max(0, Math.min(next, maxIndex)));
+        }}
+      >
+        {items.map((item) => (
+          <ProductCard key={item.id} item={item} width={PRODUCT_CARD_WIDTH} />
+        ))}
+      </ScrollView>
+      <View style={styles.sliderBottom}>
+        <View style={styles.track}>
+          <View style={[styles.trackFill, { width: `${fillRatio * 100}%` }]} />
+        </View>
+        <View style={styles.sliderArrows}>
+          <Pressable
+            style={styles.circleArrow}
+            onPress={() => goTo(activeIndex - 1)}
+            accessibilityLabel="Previous gift"
+          >
+            <AppIcon name="chevron-left" size={16} color={CircleArrowColors.icon} />
+          </Pressable>
+          <Pressable
+            style={styles.circleArrow}
+            onPress={() => goTo(activeIndex + 1)}
+            accessibilityLabel="Next gift"
+          >
+            <AppIcon name="chevron-right" size={16} color={CircleArrowColors.icon} />
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#efefef" },
+  page: { flex: 1, backgroundColor: BACKGROUND },
   pageContent: { paddingBottom: 92 },
   heroWrap: { position: "relative", marginBottom: 32, minHeight: 420 },
   heroSlide: { height: 420, minHeight: 420, justifyContent: "center" },
@@ -618,7 +820,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
   },
+  viewMoreRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    gap: 2,
+    alignSelf: "flex-start",
+  },
+  viewMoreText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#1130bc",
+  },
   sliderWrap: { marginBottom: 32 },
+  giftFetchError: {
+    fontSize: 12,
+    color: "#b91c1c",
+    marginBottom: 8,
+    paddingHorizontal: 8,
+  },
   hScroll: { paddingHorizontal: 8, gap: 10 },
   sliderCard: {
     width: 250,
@@ -756,33 +976,109 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   productCard: {
-    width: 170,
-    borderRadius: 10,
+    height: 480,
+    minHeight: 480,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#e3e5ea",
     backgroundColor: "#fff",
-    padding: 8,
+    overflow: "hidden",
+    flexDirection: "column",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  productImage: { width: "100%", height: 90, borderRadius: 8 },
-  productTitle: {
-    fontFamily: FontFamilies.body,
-    marginTop: 6,
+  productImageWrap: {
+    position: "relative",
+    width: "100%",
+    minHeight: 320,
+    height: 320,
+    overflow: "hidden",
+    backgroundColor: "#f4f4f5",
+  },
+  productBadges: {
+    position: "absolute",
+    left: 8,
+    top: 8,
+    zIndex: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  badgeExclusive: {
+    backgroundColor: "#f8d300",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  badgeEarnPoints: {
+    backgroundColor: "#1130bc",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  badgeText: {
+    fontFamily: FontFamilies.bodySemiBold,
     fontSize: 11,
-    lineHeight: 14,
+    color: "#111827",
+  },
+  badgeEarnText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 11,
+    color: "#fff",
+  },
+  productImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  productContent: {
+    flex: 1,
+    minHeight: 0,
+    padding: 24,
+    paddingTop: 24,
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+  productTitlePriceBlock: {
+    flexShrink: 0,
+    justifyContent: "flex-start",
+  },
+  productTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#111827",
   },
   productPrice: {
     fontFamily: FontFamilies.body,
     marginTop: 4,
-    color: "#4b5563",
-    fontSize: 10,
+    fontSize: 12,
+    color: "#6b7280",
+  },
+  productActionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 24,
+    flexShrink: 0,
+    marginTop: "auto",
+  },
+  productHeartBtn: {
+    padding: 4,
   },
   viewProductBtn: {
-    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
     height: 28,
     borderRadius: 7,
     backgroundColor: "#1130bc",
-    alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: 10,
   },
   viewProductText: {
     fontFamily: FontFamilies.bodyBold,
@@ -790,15 +1086,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   rewardsWrap: {
-    width: "80%",
-    alignSelf: "center",
+    width: "100%",
+    paddingHorizontal: 12,
     marginBottom: 32,
-    overflow: "hidden",
-    borderRadius: 10,
+    alignItems: "center",
+    alignSelf: "stretch",
   },
   rewardsImage: {
     width: "100%",
-    aspectRatio: 1.8,
+    aspectRatio: 1,
     borderRadius: 10,
+    overflow: "hidden",
   },
 });

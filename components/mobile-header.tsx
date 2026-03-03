@@ -1,5 +1,5 @@
 import { AppIcon } from '@/components/ui/app-icon';
-import { FontFamilies } from '@/constants/theme';
+import { BACKGROUND, FontFamilies } from '@/constants/theme';
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1130bc",
   },
   wrap: {
-    backgroundColor: "#efefef",
+    backgroundColor: BACKGROUND,
     // paddingBottom: 32,
   },
   topBlue: {

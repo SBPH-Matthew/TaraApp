@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../companion_app"
+		},
+		{
+			"path": "../tara-app-backend"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
+}

@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { AppIcon } from '@/components/ui/app-icon';
 import { ThemedText } from '@/components/themed-text';
+import { BACKGROUND } from '@/constants/theme';
 
 type MenuItem = {
   label: string;
@@ -84,7 +85,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#efefef' },
+  page: { flex: 1, backgroundColor: BACKGROUND },
   content: { paddingBottom: 92 },
   profileCard: {
     marginHorizontal: 8,
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
   menuRow: {
     minHeight: 56,
     borderRadius: 8,
-    backgroundColor: '#efefef',
+    backgroundColor: BACKGROUND,
     paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
