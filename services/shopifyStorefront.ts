@@ -197,3 +197,15 @@ export function useStorefrontProducts(sort: ProductsSort, first = 24) {
     staleTime: 60 * 1000,
   });
 }
+
+/** SpeedRegalo shop – all products (open in browser). */
+export const SPEEDREGALO_COLLECTIONS_URL =
+  "https://speedregalo.com/collections/all";
+
+/** SpeedRegalo product detail URL. Use when product has a handle. */
+export function getSpeedRegaloProductUrl(handle: string | null): string {
+  if (handle) {
+    return `https://speedregalo.com/products/${handle}`;
+  }
+  return SPEEDREGALO_COLLECTIONS_URL;
+}
