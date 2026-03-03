@@ -88,6 +88,7 @@ const FLIGHTS = [
     route: "Ninoy Aquino International (MNL) -> Davao (DVO)",
     date: "13 Feb 2026",
     time: "18:05",
+    gate: "Gate 7",
     airport: "Terminal 2",
   },
   {
@@ -96,6 +97,7 @@ const FLIGHTS = [
     route: "Ninoy Aquino International (MNL) -> El Nido (ENI)",
     date: "13 Feb 2026",
     time: "19:25",
+    gate: "Gate 12",
     airport: "Terminal 2",
   },
   {
@@ -104,6 +106,7 @@ const FLIGHTS = [
     route: "General Santos International (GES) -> Manila (MNL)",
     date: "13 Feb 2026",
     time: "18:20",
+    gate: "Gate 3",
     airport: "Terminal 2",
   },
 ];
@@ -225,12 +228,16 @@ export default function HomeScreen() {
       <HorizontalCards images={PROMO_CARDS.map((c) => c.image)} tall />
 
       <View style={styles.flightCard}>
-        <ThemedText style={styles.flightCardTitle}>
-          CHECK YOUR FLIGHT
-        </ThemedText>
-        <ThemedText style={styles.flightCardSubtitle}>
-          Find your flight and attach it to your trip
-        </ThemedText>
+        <View style={styles.flightCardHeader}>
+          <ThemedText style={styles.flightCardTitle}>
+            CHECK YOUR FLIGHT
+          </ThemedText>
+          <ThemedText style={styles.flightCardSubtitle}>
+            Find your flight and attach it to your trip for personalized
+            recommendations
+          </ThemedText>
+        </View>
+
         <View style={styles.tabsRow}>
           <Pressable
             style={[
@@ -241,8 +248,8 @@ export default function HomeScreen() {
           >
             <AppIcon
               name="flight-takeoff"
-              size={14}
-              color={flightTab === "departing" ? "#1130bc" : "#5c6470"}
+              size={24}
+              color={flightTab === "departing" ? "#001fcd" : "#6b7280"}
             />
             <ThemedText
               style={[
@@ -262,8 +269,8 @@ export default function HomeScreen() {
           >
             <AppIcon
               name="flight-land"
-              size={14}
-              color={flightTab === "arriving" ? "#1130bc" : "#5c6470"}
+              size={24}
+              color={flightTab === "arriving" ? "#001fcd" : "#6b7280"}
             />
             <ThemedText
               style={[
@@ -275,59 +282,87 @@ export default function HomeScreen() {
             </ThemedText>
           </Pressable>
         </View>
-        <TextInput
-          placeholder="Flight Number"
-          placeholderTextColor="#8b9099"
-          style={styles.formInput}
-        />
-        <TextInput
-          placeholder="mm/dd/yyyy"
-          placeholderTextColor="#8b9099"
-          style={styles.formInput}
-        />
-        <TextInput
-          placeholder="Filipino Airlines"
-          placeholderTextColor="#8b9099"
-          style={styles.formInput}
-        />
-        <Pressable style={styles.searchFlightBtn}>
-          <ThemedText style={styles.searchFlightBtnText}>Search</ThemedText>
-        </Pressable>
+
+        <View style={styles.formGroup}>
+          <TextInput
+            placeholder="Flight Number"
+            placeholderTextColor="#6b7280"
+            style={styles.formInput}
+          />
+          <TextInput
+            placeholder="mm/dd/yyyy"
+            placeholderTextColor="#6b7280"
+            style={styles.formInput}
+          />
+          <TextInput
+            placeholder="Philippine Airlines"
+            placeholderTextColor="#6b7280"
+            style={styles.formInput}
+          />
+          <Pressable style={styles.searchFlightBtn}>
+            <ThemedText style={styles.searchFlightBtnText}>Search</ThemedText>
+          </Pressable>
+        </View>
 
         <View style={styles.flightList}>
-          {FLIGHTS.map((flight) => (
-            <Pressable
-              key={flight.id}
-              style={styles.flightItem}
-              onPress={() =>
-                router.push({
-                  pathname: "/fly/[flightId]",
-                  params: { flightId: flight.id },
-                })
-              }
-            >
-              <View style={styles.statusRow}>
-                <AppIcon name="check-circle" size={12} color="#01BC1D" />
-                <ThemedText style={styles.statusText}>On Time</ThemedText>
-              </View>
-              <ThemedText style={styles.airlineText}>
-                {flight.airline}
-              </ThemedText>
-              <ThemedText style={styles.flightNumber}>{flight.id}</ThemedText>
-              <ThemedText style={styles.routeText}>{flight.route}</ThemedText>
-              <View style={styles.metaRow}>
-                <Meta label="Date" value={flight.date} />
-                <Meta label="Boarding Time" value={flight.time} />
-                <Meta label="Airport" value={flight.airport} />
-              </View>
-            </Pressable>
-          ))}
-          <Link href="/fly" asChild>
-            <Pressable style={styles.moreBtn}>
-              <ThemedText style={styles.moreBtnText}>More Flights</ThemedText>
-            </Pressable>
-          </Link>
+          {FLIGHTS.map((flight) => {
+            const [from, to] = flight.route.split(" -> ");
+            return (
+              <Pressable
+                key={flight.id}
+                style={styles.flightItem}
+                onPress={() =>
+                  router.push({
+                    pathname: "/fly/[flightId]",
+                    params: { flightId: flight.id },
+                  })
+                }
+              >
+                <View style={styles.statusRow}>
+                  <AppIcon name="check-circle" size={16} color="#01BC1D" />
+                  <ThemedText style={styles.statusText}>On Time</ThemedText>
+                </View>
+                <ThemedText style={styles.airlineText}>
+                  {flight.airline}
+                </ThemedText>
+                <ThemedText style={styles.flightNumber}>
+                  {flight.id}
+                </ThemedText>
+                <View style={styles.routeRow}>
+                  <ThemedText style={styles.routeFromTo}>{from}</ThemedText>
+                  <AppIcon name="arrow-forward" size={16} color="#1e1e1e" />
+                  <ThemedText style={styles.routeFromTo}>{to}</ThemedText>
+                </View>
+                <View style={styles.detailGrid}>
+                  <View style={styles.detailRow}>
+                    <Meta label="Date" value={flight.date} />
+                    <Meta
+                      label={
+                        flightTab === "departing"
+                          ? "Boarding Time"
+                          : "Arrival Time"
+                      }
+                      value={flight.time}
+                    />
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Meta label="Gate" value={flight.gate} />
+                    <Meta label="Airport" value={flight.airport} />
+                  </View>
+                </View>
+              </Pressable>
+            );
+          })}
         </View>
+
+        <Link href="/fly" asChild>
+          <Pressable style={styles.moreFlightsBtn}>
+            <ThemedText style={styles.moreFlightsText}>
+              More Flights
+            </ThemedText>
+            <AppIcon name="arrow-forward" size={16} color="#001fcd" />
+          </Pressable>
+        </Link>
       </View>
 
       <SectionTitle
@@ -920,105 +955,150 @@ const styles = StyleSheet.create({
   },
   flightCard: {
     marginHorizontal: 8,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#d8d8dd",
+    borderColor: "#e4e4e4",
     backgroundColor: "#fff",
-    padding: 10,
-    paddingTop: 18,
+    padding: 16,
     marginBottom: 32,
+  },
+  flightCardHeader: {
+    marginBottom: 24,
   },
   flightCardTitle: {
     fontFamily: FontFamilies.header,
-    color: "#1231bb",
+    color: "#001fcd",
     fontSize: 32,
+    lineHeight: 36,
     letterSpacing: -0.4,
-    marginBottom: 4,
   },
   flightCardSubtitle: {
     fontFamily: FontFamilies.body,
-    color: "#20252f",
-    fontSize: 16,
-    lineHeight: 22,
-    marginBottom: 16,
+    color: "#1e1e1e",
+    fontSize: 18,
+    lineHeight: 24,
+    marginTop: 4,
   },
-  tabsRow: { flexDirection: "row", gap: 16, marginBottom: 10 },
-  tabBtn: { flexDirection: "row", alignItems: "center", gap: 5, minHeight: 30 },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: "#1130bc" },
+  tabsRow: {
+    flexDirection: "row",
+    gap: 48,
+    marginBottom: 24,
+  },
+  tabBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  tabActive: {
+    borderBottomColor: "#001fcd",
+  },
   tabLabel: {
     fontFamily: FontFamilies.bodySemiBold,
-    color: "#5c6470",
-    fontSize: 12,
+    color: "#6b7280",
+    fontSize: 16,
   },
-  tabLabelActive: { color: "#1130bc" },
+  tabLabelActive: { color: "#001fcd" },
+  formGroup: {
+    gap: 12,
+    marginBottom: 24,
+  },
   formInput: {
     fontFamily: FontFamilies.body,
-    height: 34,
-    borderRadius: 6,
+    height: 44,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e2e4ea",
-    marginBottom: 8,
-    paddingHorizontal: 10,
-    fontSize: 12,
+    borderColor: "#e4e4e4",
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: "#1e1e1e",
   },
   searchFlightBtn: {
-    marginBottom: 10,
-    height: 34,
-    borderRadius: 6,
-    backgroundColor: "#1130bc",
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: "#001fcd",
     alignItems: "center",
     justifyContent: "center",
   },
   searchFlightBtnText: {
     fontFamily: FontFamilies.bodyBold,
     color: "#fff",
-    fontSize: 12,
+    fontSize: 16,
   },
-  flightList: { gap: 8 },
+  flightList: { gap: 16 },
   flightItem: {
     borderWidth: 1,
-    borderColor: "#e2e4ea",
-    borderRadius: 8,
-    padding: 10,
+    borderColor: "#e4e4e4",
+    borderRadius: 12,
+    padding: 20,
   },
-  statusRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  statusRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   statusText: {
     fontFamily: FontFamilies.bodyBold,
     color: "#01BC1D",
-    fontSize: 10,
+    fontSize: 16,
   },
   airlineText: {
     fontFamily: FontFamilies.body,
     marginTop: 4,
-    fontSize: 11,
-    color: "#272d35",
+    fontSize: 18,
+    color: "#1e1e1e",
   },
   flightNumber: {
     fontFamily: FontFamilies.header,
-    marginTop: 1,
-    fontSize: 36 / 2,
-    color: "#1f2430",
+    marginTop: 2,
+    fontSize: 40,
+    lineHeight: 44,
+    color: "#1e1e1e",
     letterSpacing: -0.4,
   },
-  routeText: {
-    fontFamily: FontFamilies.body,
-    marginTop: 2,
-    fontSize: 10,
-    color: "#4b5563",
+  routeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 4,
   },
-  metaRow: { flexDirection: "row", marginTop: 8, gap: 8 },
-  metaItem: { flex: 1 },
-  metaLabel: { fontFamily: FontFamilies.body, fontSize: 9, color: "#7d8592" },
-  metaValue: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 10,
-    color: "#1f2430",
-  },
-  moreBtn: { alignSelf: "flex-end", paddingVertical: 6, paddingHorizontal: 4 },
-  moreBtnText: {
+  routeFromTo: {
     fontFamily: FontFamilies.bodyBold,
-    color: "#1130bc",
+    fontSize: 16,
+    color: "#1e1e1e",
+    flexShrink: 1,
+  },
+  detailGrid: {
+    marginTop: 12,
+    gap: 12,
+  },
+  detailRow: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  metaItem: { flex: 1 },
+  metaLabel: {
+    fontFamily: FontFamilies.body,
     fontSize: 12,
+    color: "#7d8592",
+  },
+  metaValue: {
+    fontFamily: FontFamilies.body,
+    fontSize: 16,
+    color: "#1e1e1e",
+    marginTop: 2,
+  },
+  moreFlightsBtn: {
+    alignSelf: "flex-end",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingTop: 24,
+    paddingHorizontal: 4,
+  },
+  moreFlightsText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    color: "#001fcd",
+    fontSize: 16,
   },
   productCard: {
     height: 480,
