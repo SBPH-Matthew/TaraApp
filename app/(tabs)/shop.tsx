@@ -6,14 +6,15 @@ import {
   TrackColors,
 } from "@/constants/theme";
 import { SHOP_CATEGORY_IDS_AND_LABELS } from "@/constants/shop";
+import { DUTY_FREE_SHOP_URL } from "@/services/dutyFreeProducts";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
     Dimensions,
     FlatList,
     Image,
     ImageBackground,
+    Linking,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -51,6 +52,7 @@ const CATEGORIES = SHOP_CATEGORY_IDS_AND_LABELS.map((c) => ({
   id: c.id,
   title: c.label,
   image: CATEGORY_IMAGES[c.id] ?? require("@/assets/images/migration/hero-mobile-1.png"),
+  href: c.href,
 }));
 
 const BENEFIT_ICON_COLOR = "#1e1e1e";
@@ -172,7 +174,10 @@ export default function ShopScreen() {
           Enjoy Duty Free shopping without the long queues-browse ahead, choose
           your picks, and prep for pickup.
         </ThemedText>
-        <Pressable style={styles.primaryBtn}>
+        <Pressable
+          style={styles.primaryBtn}
+          onPress={() => Linking.openURL(DUTY_FREE_SHOP_URL)}
+        >
           <ThemedText style={styles.primaryBtnText}>Shop Duty Free</ThemedText>
         </Pressable>
         <Pressable style={styles.secondaryBtn}>
@@ -231,11 +236,12 @@ export default function ShopScreen() {
             Browse local deals and curated gift sets in minutes.
           </ThemedText>
         </View>
-        <Link href="/shop" asChild>
-          <Pressable style={styles.noteBtn}>
-            <ThemedText style={styles.noteBtnText}>Shop Here</ThemedText>
-          </Pressable>
-        </Link>
+        <Pressable
+          style={styles.noteBtn}
+          onPress={() => Linking.openURL(DUTY_FREE_SHOP_URL)}
+        >
+          <ThemedText style={styles.noteBtnText}>Shop Here</ThemedText>
+        </Pressable>
       </View>
 
       <View style={styles.ctaBlock}>
@@ -246,7 +252,10 @@ export default function ShopScreen() {
           Explore best-sellers and travel exclusives on Duty Free Philippines’
           official shop.
         </ThemedText>
-        <Pressable style={styles.ctaBtn}>
+        <Pressable
+          style={styles.ctaBtn}
+          onPress={() => Linking.openURL(DUTY_FREE_SHOP_URL)}
+        >
           <ThemedText style={styles.ctaBtnText}>Shop Duty Free</ThemedText>
         </Pressable>
       </View>
@@ -265,7 +274,7 @@ function SectionHeader({ title }: { title: string }) {
 function HorizontalCategory({
   cards,
 }: {
-  cards: { id: string; title: string; image: number }[];
+  cards: { id: string; title: string; image: number; href: string }[];
 }) {
   const scrollRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -295,32 +304,38 @@ function HorizontalCategory({
         }}
       >
         {cards.map((card) => (
-          <ImageBackground
+          <Pressable
             key={card.id}
-            source={card.image}
-            style={[
-              styles.catCard,
-              {
-                width: CATEGORY_CARD_WIDTH,
-                height: CATEGORY_CARD_HEIGHT,
-              },
-            ]}
-            imageStyle={styles.catImage}
-            resizeMode="cover"
+            onPress={() => Linking.openURL(card.href)}
+            accessibilityRole="link"
+            accessibilityLabel={card.title}
           >
-            <LinearGradient
-              colors={[
-                "rgba(0,0,0,0)",
-                "rgba(0,0,0,0.2)",
-                "rgba(0,0,0,0.65)",
+            <ImageBackground
+              source={card.image}
+              style={[
+                styles.catCard,
+                {
+                  width: CATEGORY_CARD_WIDTH,
+                  height: CATEGORY_CARD_HEIGHT,
+                },
               ]}
-              locations={[0, 0.5, 1]}
-              style={StyleSheet.absoluteFillObject}
-            />
-            <ThemedText style={styles.catLabel} numberOfLines={2}>
-              {card.title}
-            </ThemedText>
-          </ImageBackground>
+              imageStyle={styles.catImage}
+              resizeMode="cover"
+            >
+              <LinearGradient
+                colors={[
+                  "rgba(0,0,0,0)",
+                  "rgba(0,0,0,0.2)",
+                  "rgba(0,0,0,0.65)",
+                ]}
+                locations={[0, 0.5, 1]}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <ThemedText style={styles.catLabel} numberOfLines={2}>
+                {card.title}
+              </ThemedText>
+            </ImageBackground>
+          </Pressable>
         ))}
       </ScrollView>
       <View style={styles.sliderBottom}>

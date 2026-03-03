@@ -120,3 +120,18 @@ export function useFeaturedProducts() {
     staleTime: 60 * 1000,
   });
 }
+
+const DUTY_FREE_STORE_BASE =
+  (typeof process !== "undefined" &&
+    process.env?.EXPO_PUBLIC_DUTY_FREE_STORE_URL?.replace?.(/\/$/, "")) ||
+  BASE_URL;
+
+export const DUTY_FREE_SHOP_URL = "https://shop.dutyfree.gov.ph/";
+
+export function getDutyFreeShopUrl(): string {
+  return `${DUTY_FREE_STORE_BASE}/shop`;
+}
+
+export function getDutyFreeProductUrl(slug: string): string {
+  return `${DUTY_FREE_STORE_BASE}/shop/${encodeURIComponent(slug)}`;
+}
